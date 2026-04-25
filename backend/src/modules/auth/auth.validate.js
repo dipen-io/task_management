@@ -6,6 +6,7 @@ const registerValidator = [
     body('password')
     .isLength({min: 6})
     .withMessage('Password must be at least 6 character '),
+    body('adminSecret').isString().optional()
 ];
 
 const loginValidator = [
