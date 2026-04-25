@@ -19,13 +19,22 @@ const generateToken = async(userId, role) => {
     return { accessToken, refreshToken };
 }
 
-const registerUser = async ({name, email, password, role}) => {
+const registerUser = async ({ name, email, password, adminSecret }) => {
     const existingUser = await User.findOne({ email });
-    if (existingUser) throw new AppError(409, 'Email already in use');
+    if (existingUser) throw new AppError('Email already in use', 409);
+
+    // Default role is Employee
+    let userRole = 'Employee';
+
+    // If they provided the secret key, upgrade them to Admin
+    if (adminSecret && adminSecret === process.env.ADMIN_SECRET_KEY) {
+        userRole = 'Admin';
+    }
 
     const user = await User.create({
-        name, email, password, role 
+        name, email, password, role: userRole
     });
+
     const {accessToken, refreshToken} = await generateToken(user._id, user.role);
     user.refreshToken = await bcrypt.hash(refreshToken, 10);
     await user.save({ validateBeforeSave: false });
@@ -43,10 +52,10 @@ const registerUser = async ({name, email, password, role}) => {
 
 const loginUser = async(res, { email, password}) => {
     const user = await User.findOne({email}).select('+password');
-    if (!user) throw new AppError(401, 'Invalid email or password');
+    if (!user) throw new AppError("Invalid email or password", 401);
 
     const isMatch = await user.comparePassword(password);
-    if (!isMatch) throw new AppError(401, 'Invalid email or password');
+    if (!isMatch) throw new AppError("Invalid email or password", 401);
 
     const { accessToken , refreshToken } = await  generateToken(user._id, user.role);
 

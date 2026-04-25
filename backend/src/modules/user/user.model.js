@@ -26,8 +26,8 @@ const userSchema = new mongoose.Schema({
 
     role: {
         type: String,
-        enum: ["admin", "employee"],
-        default: "employee"
+        enum: ["Admin", "Employee"],
+        default: "Employee"
     },
 
     refreshToken: {
@@ -41,7 +41,7 @@ const userSchema = new mongoose.Schema({
 // hash the password 
 userSchema.pre('save', async function () {
   if (!this.isModified('password')) return;
-  this.password = bcrypt.hash(this.password, 10);
+  this.password = await bcrypt.hash(this.password, 10);
 });
 
 //Compare the password method
