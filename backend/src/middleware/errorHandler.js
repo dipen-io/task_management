@@ -21,7 +21,7 @@ const errorHandler = (err, req, res, next) => {
     else {
         res.status(err.statusCode).json({
             status: err.status,
-            error: err,
+            errors: err.errors && err.errors.length > 0 ? err.errors : undefined,
             message: err.message,
             stack: err.stack
         });

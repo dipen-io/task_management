@@ -1,10 +1,14 @@
+require('dotenv').config({quiet: true});
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require('cookie-parser');
 const erroHandler = require("./middleware/errorHandler");
-const AppError = require("./middleware/AppError");
+const AppError = require("./utils/AppError");
+const validateEnv = require('./utils/validateEnv');
+const routes = require("./routes/index");
 
 const app = express();
+validateEnv();
 
 // middleware
 app.use(cors());
@@ -12,13 +16,16 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded ({extended: true}))
 
-app.use((req, _, next) => {
+app.use((req, res, next) => {
     console.log(`INCOMING REQUEST: ${req.method} ${req.url}`);
     next();
 });
 
+//register routes
+routes(app);
+
 // healthcheck
-app.get('/health', (_, res) => {
+app.get('/health', (req, res) => {
     res.json({
         success: true,
         message: "API Is WORKING..",
@@ -26,7 +33,7 @@ app.get('/health', (_, res) => {
 });
 
 
-app.use((req, _, next) => {
+app.use((req, res, next) => {
     console.log(`HIT 404 CATCH-ALL for ${req.url}`);
     next(new AppError(`Route ${req.originalUrl} not found`, 404));
 });
