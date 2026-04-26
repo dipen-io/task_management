@@ -55,6 +55,7 @@ const loginUser = async(res, { email, password}) => {
     if (!user) throw new AppError("Invalid email or password", 401);
 
     const isMatch = await user.comparePassword(password);
+    console.log("match", isMatch);
     if (!isMatch) throw new AppError("Invalid email or password", 401);
 
     const { accessToken , refreshToken } = await  generateToken(user._id, user.role);
@@ -64,6 +65,42 @@ const loginUser = async(res, { email, password}) => {
     await user.save({ validateBeforeSave: false });
     res.cookie( 'refreshToken', refreshToken, COOKIE_OPTIONS );
   return { user: { _id: user._id, name: user.name, email: user.email, role: user.role }, accessToken, refreshToken };
+
 }
 
-module.exports = { registerUser, loginUser }
+const refreshAccessToken = async(res, token) => {
+
+    if (!token) throw new AppError('Refresh Token is required', 401)
+    let decoded; 
+
+    try {
+        decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+    } catch (error) {
+        throw new AppError('Invalid or expired refresh token', 401);
+    }
+
+    const user = await User.findById(decoded.id).select('+refreshToken');
+
+    if (!user) {
+        throw new AppError( 'User not found or token missing', 401);
+    } 
+
+    const isMatch =  await bcrypt.compare(token, user.refreshToken);
+
+    if (!isMatch) {
+        throw new AppError('Refresh token missmatch', 401);
+    }
+
+
+    const { accessToken, refreshToken } = await generateToken(user._id, user.role);
+    const hashedToken = await bcrypt.hash(refreshToken, 10);
+    user.refreshToken = hashedToken;
+    await user.save({ validateBeforeSave: false }); 
+
+    res.cookie( 'refreshToken', refreshToken, COOKIE_OPTIONS );
+
+    return { accessToken, refreshToken };
+}
+
+
+module.exports = { registerUser, loginUser, refreshAccessToken }

@@ -23,7 +23,7 @@ const login = asyncHandler(async (req, res) => {
 
 const refreshToken = asyncHandler(async (req, res) => {
     const refreshToken = req.cookies.refreshToken;
-    const result = await refreshAccessToken(res,refreshToken);
+    const result = await refreshAccessToken(res, refreshToken);
 
     res.status(HTTP_STATUS.OK).json(new ApiResponse(200, "Token Refreshed", result));
 })
