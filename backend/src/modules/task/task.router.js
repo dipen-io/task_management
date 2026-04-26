@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const { protect , authorize} = require('../../middleware/auth');
-const { createTask, deleteTask, getAllTasks } = require('./task.controller');
-const { createTaskValidator, taskIdValidator, updateTaskValidator } = require("./task.validate")
+const {updateTask, assignTask, createTask, deleteTask, getAllTasks, getSingleTask } = require('./task.controller');
+const { assignTaskValidator, createTaskValidator, taskIdValidator, updateTaskValidator } = require("./task.validate")
 const validate = require("../../middleware/input-validate");
 const { ROLES } = require('../../constant/roles');
 
@@ -14,8 +14,35 @@ router.get(
     getAllTasks
 );
 
-// router.post('/login', loginValidator,validate, login);
-// router.post('/refresh', refreshToken);
-// router.get('/me', protect, getMe);
+// GET Single Task (Admins & Assignees)
+router.get(
+    '/:id', 
+    protect,
+    taskIdValidator,
+    validate,
+    getSingleTask
+);
+
+// UPDATE Task (Smart Route for both Admins & Employees)
+router.patch(
+    '/:id', 
+    protect, 
+    taskIdValidator, 
+    updateTaskValidator, 
+    validate, 
+    updateTask
+);
+
+// ASSIGN Task (Admin Only)
+// in body Employees id
+router.patch(
+    '/:id/assign', 
+    protect, 
+    authorize(ROLES.ADMIN),
+    assignTaskValidator, 
+    validate, 
+    assignTask
+);
+
 
 module.exports = router; 
