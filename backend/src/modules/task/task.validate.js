@@ -37,8 +37,18 @@ const updateTaskValidator = [
     body('assignedTo').optional().trim().isMongoId()
 ];
 
+const assignTaskValidator = [
+    param('id')
+        .isMongoId().withMessage('Invalid Task ID format'),
+    body('assignedTo')
+        .trim()
+        .notEmpty().withMessage('You must provide an Employee ID to assign this task to')
+        .isMongoId().withMessage('Invalid Employee ID format')
+];
+
 module.exports = {
     createTaskValidator,
     updateTaskValidator,
-    taskIdValidator
+    taskIdValidator,
+    assignTaskValidator
 };

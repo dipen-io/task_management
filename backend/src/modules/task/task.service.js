@@ -1,5 +1,6 @@
 const AppError = require("../../utils/AppError");
 const Task = require("./task.model");
+const User = require("../user/user.model");
 
 
 const create = async ( taskData ) => {
@@ -34,6 +35,16 @@ const getAll = async(query) => {
     if (query.status) {
         filter.status = query.status;
     }
+
+    if (query.assignedTo) {
+        filter.assignedTo = query.assignedTo;
+    }
+
+    if (query.search) {
+        // $regex allows partial matches, $options: 'i' makes it case-insensitive!
+        filter.title = { $regex: query.search, $options: 'i' };
+    }
+
     const page = parseInt(query.page, 10) || 1;
     const limit = parseInt(query.limit, 10) || 10;
     const skip = (page - 1) * limit;
@@ -58,5 +69,90 @@ const getAll = async(query) => {
     };
 }
 
-module.exports = { create, remove, getAll };
+// single task
+const getOne = async (taskId, user) => {
+    const task  = await Task.findById(taskId)
+    .populate('assignedTo', 'name email')
+    .populate('createdBy', 'name');
+
+    if (!task) {
+        throw new AppError("Task not foun", 404);
+    }
+
+    const isAdmin = user.role == 'Admin';
+    const isAssignee = task.assignedTo?._id.toString() === user._id.toString();
+
+    // 3. If they aren't an Admin AND they aren't the assignee, block them!
+    if (!isAdmin && !isAssignee) {
+        throw new AppError("You do not have permission to view this task", 403);
+    }
+
+    return task;
+
+}
+
+
+const updateOne = async (taskId, updateData, user) => {
+
+    const task = await Task.findById(taskId);
+    console.log("task: ", task);
+    
+    if (!task) {
+        throw new AppError("Task not found", 404);
+    }
+
+    const isAdmin = user.role === 'Admin';
+    const isAssignee = task.assignedTo?.toString() === user._id.toString();
+
+    if (!isAdmin && !isAssignee) {
+        throw new AppError("You do not have permission to update this task", 403);
+    }
+
+    let finalUpdateData = { ...updateData };
+
+    if (!isAdmin && isAssignee) {
+        finalUpdateData = {};
+        if (updateData.status) {
+            finalUpdateData.status = updateData.status;
+        }
+    }
+
+    const updatedTask = await Task.findByIdAndUpdate(
+        taskId, 
+        finalUpdateData, 
+        { 
+            new: true,
+            runValidators: true
+        }
+    )
+    .populate('assignedTo', 'name email')
+    .populate('createdBy', 'name');
+
+    return updatedTask;
+};
+
+const assignOne = async (taskId, newAssigneeId) => {
+    const task = await Task.findById(taskId);
+    if (!task) {
+        throw new AppError("Task not found", 404);
+    }
+
+    const employee = await User.findById(newAssigneeId);
+    if (!employee) {
+        throw new AppError("Employee not found in the database", 404);
+    }
+
+    task.assignedTo = newAssigneeId;
+    
+    await task.save();
+
+    const updatedTask = await Task.findById(taskId)
+        .populate('assignedTo', 'name email')
+        .populate('createdBy', 'name');
+
+    return updatedTask;
+};
+
+
+module.exports = { create, remove, getAll, getOne, updateOne, assignOne };
 
