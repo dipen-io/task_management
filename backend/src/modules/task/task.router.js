@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const { protect , authorize} = require('../../middleware/auth');
-const {updateTask, assignTask, createTask, deleteTask, getAllTasks, getSingleTask } = require('./task.controller');
+const { updateTask, assignTask, createTask, deleteTask, getAllTasks, getSingleTask } = require('./task.controller');
 const { assignTaskValidator, createTaskValidator, taskIdValidator, updateTaskValidator } = require("./task.validate")
 const validate = require("../../middleware/input-validate");
 const { ROLES } = require('../../constant/roles');
@@ -43,6 +43,7 @@ router.patch(
     validate, 
     assignTask
 );
+
 
 
 module.exports = router; 

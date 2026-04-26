@@ -9,9 +9,7 @@ const create = async ( taskData ) => {
 };
 
 const remove = async(taskId, user) => {
-    console.log("taskId", taskId)
     const task = await Task.findById(taskId);
-    console.log(task);
     if (!task) {
         throw new AppError("Task not found", 404);
     }
@@ -95,7 +93,6 @@ const getOne = async (taskId, user) => {
 const updateOne = async (taskId, updateData, user) => {
 
     const task = await Task.findById(taskId);
-    console.log("task: ", task);
     
     if (!task) {
         throw new AppError("Task not found", 404);
@@ -155,4 +152,3 @@ const assignOne = async (taskId, newAssigneeId) => {
 
 
 module.exports = { create, remove, getAll, getOne, updateOne, assignOne };
-

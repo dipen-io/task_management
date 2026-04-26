@@ -75,5 +75,7 @@ const assignTask = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, "Task assigned successfully", task));
 });
 
-module.exports = { createTask, deleteTask, getAllTasks, getSingleTask, updateTask, assignTask };
+
+module.exports = {
+    createTask, deleteTask, getAllTasks, getSingleTask, updateTask, assignTask };
 
