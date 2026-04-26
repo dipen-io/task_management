@@ -29,7 +29,6 @@ const authorize = (...roles) => (req, res, next) => {
     if (!roles.includes(req.user.role)) {
         throw new AppError(`Access denied for role: ${req.user.role}`, 403);
     }
-    console.log("USER ROLE: ", req.user.role);
     next();
 }
 

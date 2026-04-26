@@ -1,5 +1,6 @@
 const asyncHandler = require('../../utils/asyncHandler');
-const ApiResponse = require();
+const ApiResponse = require('../../utils/ApiResponse');
+const { getAllEmployees } = require("./user.service")
 
 const listEmployees = asyncHandler(async (req, res) => {
     const employees = await getAllEmployees(req.query);
