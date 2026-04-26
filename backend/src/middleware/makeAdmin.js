@@ -10,16 +10,16 @@ const makeAmin = async() => {
         const adminExist = await User.findOne({email: adminEmail});
 
         if (adminExist) {
-            console.log("Admin already exist");
+            // console.log("Admin already exist");
             return;
         }
 
-        const hashedPassword = await bcrypt.hash('admin', 10);
+        const password = 'admin@123'
 
         await User.create({
             name: "Admin",
             email: adminEmail,
-            password: hashedPassword,
+            password: password,
             role: 'Admin'
         });
         console.log('✅ Default Admin seeded successfully!');
