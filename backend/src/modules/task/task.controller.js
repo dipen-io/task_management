@@ -1,17 +1,17 @@
 const asyncHandler = require('../../utils/asyncHandler');
 const ApiResponse = require('../../utils/ApiResponse');
-const { create, remove, getAll, getOne, updateOne, assignOne } = require('./task.service');
+const { getTaskByEmployee, create, remove, getAll, getOne, updateOne, assignOne } = require('./task.service');
 const { HTTP_STATUS } = require("../../constant/httpStatus");
 
 // creat task
 const createTask = asyncHandler(async (req, res) => {
     const taskPayoad = {
         ...req.body,
-        createdBy: req.user._id
+        createdBy: req.user._id,
+        assignedTo: req.body.assigneeId
     };
 
     const result = await create(taskPayoad);
-    console.log("resulf", result);
     res.status(HTTP_STATUS.OK).json(new ApiResponse(201, "Task created successfully", result));
 })
 
@@ -46,19 +46,17 @@ const getSingleTask = asyncHandler(async (req, res) => {
 })
 
 const updateTask = asyncHandler(async (req, res) => {
+
 // Task update by admin only
 // task status update by employee
-    console.log("running..")
     const taskId = req.params.id;
     const updatePayload = req.body;
+    console.log("body",req.body)
+    const assignedTo = req.body.assigneeId;
     const user = req.user;
 
-    console.log("taskId", taskId);
-    console.log("req.body", req.body);
-    console.log("req.user",req.user);
-
     // Pass everything to our smart service
-    const updatedTask = await updateOne(taskId, updatePayload, user);
+    const updatedTask = await updateOne(taskId, updatePayload, user, assignedTo);
 
     res.status(200).json(new ApiResponse(200, "Task updated successfully", updatedTask));
 });
@@ -75,7 +73,17 @@ const assignTask = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, "Task assigned successfully", task));
 });
 
+const getTaskByEmp = asyncHandler(async (req, res) => {
+    const id = req.user._id;
+    const tasks = await getTaskByEmployee(id);
+    const payload = {
+        count: tasks.length,
+        data: tasks
+    }
+    res.status(200).json(new ApiResponse(200, "Task by Employee successfully", payload));
+})
+
 
 module.exports = {
-    createTask, deleteTask, getAllTasks, getSingleTask, updateTask, assignTask };
+    createTask, deleteTask, getAllTasks, getSingleTask, updateTask, assignTask, getTaskByEmp };
 

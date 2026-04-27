@@ -74,7 +74,7 @@ const getOne = async (taskId, user) => {
     .populate('createdBy', 'name');
 
     if (!task) {
-        throw new AppError("Task not foun", 404);
+        throw new AppError("Task not found", 404);
     }
 
     const isAdmin = user.role == 'Admin';
@@ -89,11 +89,17 @@ const getOne = async (taskId, user) => {
 
 }
 
+const getTaskByEmployee = async (id) => {
+  const tasks = await Task.find({ assignedTo: id })
+    .populate('createdBy', 'name email')
+    .sort({ createdAt: -1 });
+  return tasks;
+};
 
-const updateOne = async (taskId, updateData, user) => {
 
+const updateOne = async (taskId, updateData, user, assignedTo) => {
     const task = await Task.findById(taskId);
-    
+
     if (!task) {
         throw new AppError("Task not found", 404);
     }
@@ -105,22 +111,30 @@ const updateOne = async (taskId, updateData, user) => {
         throw new AppError("You do not have permission to update this task", 403);
     }
 
-    let finalUpdateData = { ...updateData };
+    let finalUpdateData = {};
 
-    if (!isAdmin && isAssignee) {
-        finalUpdateData = {};
-        if (updateData.status) {
-            finalUpdateData.status = updateData.status;
+    if (isAdmin) {
+        // ✅ admin can update everything
+        finalUpdateData = { ...updateData };
+        if (assignedTo) {
+            finalUpdateData.assignedTo = assignedTo;
         }
+        delete finalUpdateData.assigneeId;
+
+    } else if (isAssignee) {
+        console.log("isAssignee: ", isAssignee)
+        // ✅ employee can ONLY update status
+        console.log("upd",updateData);
+        if (!updateData.status) {
+            throw new AppError("Employees can only update task status", 400);
+        }
+        finalUpdateData = { status: updateData.status };
     }
 
     const updatedTask = await Task.findByIdAndUpdate(
-        taskId, 
-        finalUpdateData, 
-        { 
-            new: true,
-            runValidators: true
-        }
+        taskId,
+        finalUpdateData,
+        { new: true, runValidators: true }
     )
     .populate('assignedTo', 'name email')
     .populate('createdBy', 'name');
@@ -151,4 +165,4 @@ const assignOne = async (taskId, newAssigneeId) => {
 };
 
 
-module.exports = { create, remove, getAll, getOne, updateOne, assignOne };
+module.exports = { create, remove, getAll, getOne, updateOne, assignOne, getTaskByEmployee };

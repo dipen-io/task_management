@@ -1,11 +1,13 @@
 const router = require('express').Router();
 const { protect , authorize} = require('../../middleware/auth');
-const { updateTask, assignTask, createTask, deleteTask, getAllTasks, getSingleTask } = require('./task.controller');
+const {getTaskByEmp, updateTask, assignTask, createTask, deleteTask, getAllTasks, getSingleTask } = require('./task.controller');
 const { assignTaskValidator, createTaskValidator, taskIdValidator, updateTaskValidator } = require("./task.validate")
 const validate = require("../../middleware/input-validate");
 const { ROLES } = require('../../constant/roles');
 
 router.post('/create', protect, authorize(ROLES.ADMIN) , createTaskValidator, validate, createTask);
+
+router.get('/my-tasks', protect, authorize(ROLES.EMPLOYEE), getTaskByEmp);
 router.delete('/:id', protect, taskIdValidator, validate, deleteTask);
 router.get(
     '/', 
@@ -13,6 +15,7 @@ router.get(
     authorize(ROLES.ADMIN),
     getAllTasks
 );
+
 
 // GET Single Task (Admins & Assignees)
 router.get(
@@ -43,6 +46,7 @@ router.patch(
     validate, 
     assignTask
 );
+
 
 
 

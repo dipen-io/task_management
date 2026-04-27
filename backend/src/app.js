@@ -6,12 +6,13 @@ const erroHandler = require("./middleware/errorHandler");
 const AppError = require("./utils/AppError");
 const validateEnv = require('./utils/validateEnv');
 const routes = require("./routes/index");
+const corsOptions = require("./config/cors");
 
 const app = express();
 validateEnv();
 
 // middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded ({extended: true}))
