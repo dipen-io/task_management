@@ -1,126 +1,121 @@
-import { type JSX, useState } from "react";
-import { TEInput, TERipple } from "tw-elements-react";
 
-export default function LoginPage(): JSX.Element {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { Link, Navigate, useNavigate } from 'react-router';
+import { Mail, Lock } from 'lucide-react';
+import { loginUser } from '../api/authApi';
+import toast from 'react-hot-toast';
+
+export function LoginPage() {
+  const { user, loading, saveData } = useAuth();
+
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState("");
+  const [Loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  if (loading) return <div>Loading...</div>;
+  if (user) return <Navigate to="/" replace />;
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
-    if (!email || !password) {
-      setError("Please fill in all fields");
-      return;
+    setLoading(true);
+    const payload = {
+      email,
+      password
     }
 
-    setLoading(true);
+    try {
+      const data = await loginUser(payload);
+      toast.success(data.message);
+      saveData(data.data.user, data.data.accessToken)
+      navigate("/", { replace: true });
 
-    // Mock login - replace with real API
-    setTimeout(() => {
+    } catch (error: any) {
+      setError(error)
+    }
+    finally {
       setLoading(false);
-      if (email === "demo@example.com" && password === "password") {
-        alert("Login successful!");
-      } else {
-        setError("Invalid credentials. Use demo@example.com / password");
-      }
-    }, 1000);
+    }
   };
 
   return (
-    <>
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(5deg); }
-        }
-        @keyframes drift {
-          0% { transform: translateX(-10%); }
-          50% { transform: translateX(10%); }
-          100% { transform: translateX(-10%); }
-        }
-        .animate-float { animation: float 6s ease-in-out infinite; }
-        .animate-drift { animation: drift 20s ease-in-out infinite; }
-      `}</style>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-6">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-2 justify-center mb-8">
+          <div className="w-10 h-10 bg-[#14b8a6] rounded-lg" />
+          <span className="text-2xl text-gray-900">TaskManager</span>
+        </Link>
 
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-neutral-900 dark:to-neutral-800">
-        {/* Looping background shapes */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-10 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-float" />
-          <div className="absolute bottom-10 right-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-float" style={{ animationDelay: "2s" }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl animate-drift" />
-        </div>
+        {/* Login Card */}
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          <h1 className="text-center text-gray-900 mb-2">Welcome back</h1>
+          <p className="text-center text-gray-600 mb-8">Sign in to your account</p>
 
-        <div className="relative z-10 w-full max-w-6xl px-4 flex flex-wrap items-center justify-center lg:justify-between">
+          <form onSubmit={handleSubmit} className="space-y-5">
 
-          {/* Image */}
-          <div className="mb-10 md:mb-0 md:w-9/12 lg:w-6/12">
-            <img
-              src="https://tecdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/draw2.webp"
-              className="w-full animate-float"
-              style={{ animationDuration: "8s" }}
-              alt="Login"
-            />
-          </div>
-
-          {/* Form */}
-          <div className="md:w-8/12 lg:w-5/12">
-            <form onSubmit={handleLogin} className="bg-white dark:bg-neutral-800 rounded-2xl shadow-xl p-8 space-y-6">
-
-              {error && (
-                <div className="p-3 bg-red-100 text-red-700 rounded-lg text-sm">
-                  {error}
-                </div>
-              )}
-
-              <TEInput
-                type="email"
-                label="Email address"
-                size="lg"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-
-              <TEInput
-                type="password"
-                label="Password"
-                size="lg"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="rounded border-neutral-300" />
-                  Remember me
-                </label>
-                <a href="#!" className="text-primary hover:underline">Forgot password?</a>
+            {/* Email */}
+            <div>
+              <label className="block mb-2 text-gray-700">Email</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14b8a6]/20 focus:border-[#14b8a6]"
+                  required
+                />
               </div>
+            </div>
 
-              <TERipple rippleColor="light">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full rounded bg-primary py-3 text-sm font-medium uppercase text-white shadow transition hover:bg-primary-600 disabled:opacity-70"
-                >
-                  {loading ? "Signing in..." : "Login"}
-                </button>
-              </TERipple>
+            {/* Password */}
+            <div>
+              <label className="block mb-2 text-gray-700">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14b8a6]/20 focus:border-[#14b8a6]"
+                  required
+                />
+              </div>
+            </div>
 
-              <p className="text-center text-sm text-neutral-600 dark:text-neutral-300">
-                Don't have an account?{" "}
-                <a href="/signup" className="text-danger font-semibold hover:underline">Register</a>
-              </p>
+            {/* Forgot Password */}
+            <div className="flex justify-end">
+              <button type="button" className="text-sm text-[#14b8a6] hover:underline">
+                Forgot password?
+              </button>
+            </div>
 
-              <p className="text-center text-xs text-neutral-400">
-                Demo: demo@example.com / password
-              </p>
-            </form>
-          </div>
+            {/* Submit */}
+            <button disabled={Loading}
+              type="submit"
+              className="w-full py-3 bg-[#14b8a6] text-white rounded-lg hover:bg-[#14b8a6]/90 transition-colors"
+            >
+              {Loading ? "Signing.." : "Sign In"}
+
+            </button>
+            {error && <p> {error} </p>}
+          </form>
+
+          {/* Sign Up Link */}
+          <p className="text-center text-gray-600 mt-6">
+            Don't have an account?{' '}
+            <Link to="/signup" className="text-[#14b8a6] hover:underline">
+              Register
+            </Link>
+          </p>
         </div>
-      </section>
-    </>
+      </div>
+    </div>
   );
 }

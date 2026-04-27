@@ -3,13 +3,5 @@
   "references": [
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }
-  ],
-
-"compilerOptions": {
-    // For React 17+ (Vite, Next.js, modern Create React App)
-    "jsx": "react-jsx", 
-    
-    // OR if you are on an older version of React
-    // "jsx": "react"
-  }
+  ]
 }
